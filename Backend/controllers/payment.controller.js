@@ -1,5 +1,7 @@
+// controllers/payment.controller.js
 import Stripe from "stripe";
 import dotenv from "dotenv";
+import Product from "../models/product.model.js";
 import Coupon from "../models/coupon.model.js";
 
 dotenv.config();
@@ -7,8 +9,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createCheckoutSession = async (req, res) => {
   try {
-    const { products, coupon: couponCode } = req.body;
-    if (!Array.isArray(products) || products.length === 0) {
+    const { products: cartItems, coupon: couponCode } = req.body;
+
+    if (!Array.isArray(cartItems) || cartItems.length === 0) {
       return res.status(400).json({ message: "No products provided" });
     }
 
@@ -16,18 +19,29 @@ export const createCheckoutSession = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const lineItems = products.map((product) => ({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: product.name,
-          images: product.image ? [product.image] : [], // avoid undefined
-        },
-        unit_amount: Math.round(product.price * 100),
-      },
-      quantity: product.quantity || 1,
-    }));
+    // Fetch product details from DB
+    const productIds = cartItems.map((p) => p.id);
+    const dbProducts = await Product.find({ _id: { $in: productIds } });
 
+    const lineItems = cartItems.map((item) => {
+      const dbProduct = dbProducts.find((p) => p._id.toString() === item.id);
+      if (!dbProduct) {
+        throw new Error(`Product not found: ${item.id}`);
+      }
+      return {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: dbProduct.name,
+            images: dbProduct.image ? [dbProduct.image] : [],
+          },
+          unit_amount: Math.round(dbProduct.price * 100),
+        },
+        quantity: item.quantity || 1,
+      };
+    });
+
+    // Handle coupon
     let discount = null;
     if (couponCode) {
       const coupon = await Coupon.findOne({
@@ -35,6 +49,7 @@ export const createCheckoutSession = async (req, res) => {
         userId: req.user._id,
         isActive: true,
       });
+
       if (coupon && coupon.discountPercentage > 0) {
         const stripeCoupon = await stripe.coupons.create({
           duration: "once",
@@ -55,7 +70,11 @@ export const createCheckoutSession = async (req, res) => {
         userId: req.user._id.toString(),
         couponCode: couponCode || "",
         products: JSON.stringify(
-          products.map((p) => ({ id: p.id, quantity: p.quantity, price: p.price }))
+          cartItems.map((p) => ({
+            id: p.id,
+            quantity: p.quantity,
+            price: dbProducts.find(dp => dp._id.toString() === p.id).price,
+          }))
         ),
       },
     });
