@@ -1,7 +1,5 @@
-// controllers/payment.controller.js
 import Stripe from "stripe";
 import dotenv from "dotenv";
-import Product from "../models/product.model.js";
 import Coupon from "../models/coupon.model.js";
 
 dotenv.config();
@@ -9,9 +7,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const createCheckoutSession = async (req, res) => {
   try {
-    const { products: cartItems, coupon: couponCode } = req.body;
+    const { products, coupon: couponCode } = req.body;
 
-    if (!Array.isArray(cartItems) || cartItems.length === 0) {
+    if (!Array.isArray(products) || products.length === 0) {
       return res.status(400).json({ message: "No products provided" });
     }
 
@@ -19,29 +17,18 @@ export const createCheckoutSession = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Fetch product details from DB
-    const productIds = cartItems.map((p) => p.id);
-    const dbProducts = await Product.find({ _id: { $in: productIds } });
-
-    const lineItems = cartItems.map((item) => {
-      const dbProduct = dbProducts.find((p) => p._id.toString() === item.id);
-      if (!dbProduct) {
-        throw new Error(`Product not found: ${item.id}`);
-      }
-      return {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: dbProduct.name,
-            images: dbProduct.image ? [dbProduct.image] : [],
-          },
-          unit_amount: Math.round(dbProduct.price * 100),
+    const lineItems = products.map((product) => ({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: product.name,
+          images: product.image ? [product.image] : [],
         },
-        quantity: item.quantity || 1,
-      };
-    });
+        unit_amount: Math.round(product.price * 100),
+      },
+      quantity: product.quantity || 1,
+    }));
 
-    // Handle coupon
     let discount = null;
     if (couponCode) {
       const coupon = await Coupon.findOne({
@@ -49,7 +36,6 @@ export const createCheckoutSession = async (req, res) => {
         userId: req.user._id,
         isActive: true,
       });
-
       if (coupon && coupon.discountPercentage > 0) {
         const stripeCoupon = await stripe.coupons.create({
           duration: "once",
@@ -64,24 +50,20 @@ export const createCheckoutSession = async (req, res) => {
       line_items: lineItems,
       mode: "payment",
       success_url: `${process.env.CLIENT_URL}/purchase-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.CLIENT_URL}/purchase-cancel`,
+      cancel_url: `${process.env.CLIENT_URL}/cart`,
       discounts: discount ? [{ coupon: discount }] : [],
       metadata: {
         userId: req.user._id.toString(),
         couponCode: couponCode || "",
         products: JSON.stringify(
-          cartItems.map((p) => ({
-            id: p.id,
-            quantity: p.quantity,
-            price: dbProducts.find(dp => dp._id.toString() === p.id).price,
-          }))
+          products.map((p) => ({ id: p.id, quantity: p.quantity, price: p.price }))
         ),
       },
     });
 
     return res.status(200).json({ url: session.url });
   } catch (error) {
-    console.error("Stripe checkout error:", error.message);
+    console.error("Stripe checkout error:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
