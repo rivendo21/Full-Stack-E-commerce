@@ -9,6 +9,7 @@ export const createCheckoutSession = async (req, res) => {
       return res.status(400).json({ message: "No products provided" });
     }
 
+    // Map products to Stripe line items
     const lineItems = products.map((product) => ({
       price_data: {
         currency: "usd",
@@ -21,6 +22,7 @@ export const createCheckoutSession = async (req, res) => {
       quantity: product.quantity || 1,
     }));
 
+    // Handle coupon/discount
     let discount = null;
     if (couponCode) {
       const coupon = await Coupon.findOne({
@@ -33,6 +35,7 @@ export const createCheckoutSession = async (req, res) => {
       }
     }
 
+    // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -53,22 +56,20 @@ export const createCheckoutSession = async (req, res) => {
       },
     });
 
-    return res.status(200).json({ url: session.url });
-
-    const totalAmount = products.reduce(
-      (sum, p) => sum + p.price * p.quantity,
-      0
-    );
+    
+    const totalAmount = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
     if (totalAmount >= 20000) {
       await createNewCoupon(req.user._id);
     }
+
+    return res.status(200).json({ url: session.url });
   } catch (error) {
-    console.error(error);
+    console.error("Stripe checkout error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// create one-time Stripe coupon
+// Helper: create one-time Stripe coupon
 async function createStripeCoupon(discountPercentage) {
   const stripeCoupon = await stripe.coupons.create({
     duration: "once",
@@ -77,7 +78,7 @@ async function createStripeCoupon(discountPercentage) {
   return stripeCoupon.id;
 }
 
-// create new coupon in DB
+// Helper: create new coupon in DB
 async function createNewCoupon(userId) {
   const newCoupon = new Coupon({
     code: "GIFT" + Math.random().toString(36).substring(2, 9).toUpperCase(),
@@ -85,7 +86,6 @@ async function createNewCoupon(userId) {
     expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     userId,
   });
-
   await newCoupon.save();
   return newCoupon;
 }
