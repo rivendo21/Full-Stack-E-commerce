@@ -1,12 +1,11 @@
 {
-<<<<<<< HEAD
   "name": "e-commerce-store",
   "version": "1.0.0",
   "main": "Backend/server.js",
   "scripts": {
     "dev": "nodemon Backend/server.js",
     "start": "node Backend/server.js",
-    "build": "npm install  && npm install --prefix frontend && npm run build --prefix frontend"
+    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
   },
   "keywords": [],
   "author": "",
@@ -33,28 +32,6 @@
     "recharts": "^3.2.1",
     "stripe": "^19.1.0",
     "zustand": "^5.0.8"
-=======
-  "name": "fullstack",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "dev": "nodemon backend/server.js"
-  },
-  "type": "module",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@chakra-ui/react": "^3.27.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "framer-motion": "^12.23.13",
-    "mongoose": "^8.18.1",
-    "open": "^10.2.0"
->>>>>>> 057f664c90e8a391da34eaab1a4d1dbf7736438c
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
