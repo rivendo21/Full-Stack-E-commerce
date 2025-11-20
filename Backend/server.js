@@ -39,7 +39,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "Frontend/dist")));
 
   // This handles any route that isn't an API or static file
-  app.get("*", (req, res) => {
+  app.get("/*", (req, res) => {
     res.sendFile(path.join(__dirname, "Frontend/dist", "index.html"));
   });
 }
