@@ -36,7 +36,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/payments", paymentRoutes);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "/frontend/dist")));
+  app.use(express.static(path.join(__dirname, "/Frontend/dist")));
 }
 
 app.listen(PORT, async () => {
