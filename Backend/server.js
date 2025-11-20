@@ -36,8 +36,14 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/payments", paymentRoutes);
 
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "/Frontend/dist")));
+  app.use(express.static(path.join(__dirname, "Frontend/dist")));
+
+  // This handles any route that isn't an API or static file
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "Frontend/dist", "index.html"));
+  });
 }
+
 
 app.listen(PORT, async () => {
   console.log("Server is running on port: " + PORT);
