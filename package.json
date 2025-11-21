@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "Backend/server.js",
   "type": "module",
- "scripts": {
-  "dev": "nodemon Backend/server.js",
-  "start": "node Backend/server.js",
-  "build": "cd Frontend && npm install && npm run build"
-},
+  "scripts": {
+    "dev": "nodemon Backend/server.js",
+    "start": "node Backend/server.js",
+    "build": "cd Frontend && npm install && npm run build"
+  },
   "dependencies": {
     "@stripe/stripe-js": "^8.0.0",
     "axios": "^1.12.2",
