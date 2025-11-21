@@ -3,12 +3,13 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
+ "scripts": {
   "dev": "vite",
-  "build": "npx --no-install vite build",
-  "preview": "npx --no-install vite preview",
+  "build": "vite build",
+  "preview": "vite preview",
   "lint": "eslint ."
 },
+
 
   "dependencies": {
     "react": "^18.2.0",
