@@ -49,8 +49,8 @@ if (process.env.NODE_ENV === "production") {
   const frontendDistPath = path.join(__dirname, "../Frontend/dist");
   app.use(express.static(frontendDistPath));
 
-  // Catch-all for SPA routing
-  app.get("*", (req, res) => {
+  // Fix for Express 5: use /:path* instead of *
+  app.get("/:path*", (req, res) => {
     res.sendFile(path.join(frontendDistPath, "index.html"));
   });
 }
