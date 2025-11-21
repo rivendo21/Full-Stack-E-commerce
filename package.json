@@ -2,18 +2,14 @@
   "name": "e-commerce-store",
   "version": "1.0.0",
   "main": "Backend/server.js",
-  "scripts": {
-  "dev": "nodemon Backend/server.js",
-  "start": "node Backend/server.js",
-  "build": "npm install && npm install --prefix Frontend && vite build --cwd Frontend"
-},
-
-  "keywords": [],
-  "author": "",
   "type": "module",
-  "license": "ISC",
-  "description": "",
+  "scripts": {
+    "dev": "nodemon Backend/server.js",
+    "start": "node Backend/server.js",
+    "build": "npm install && cd Frontend && npm install && npx vite build"
+  },
   "dependencies": {
+    "@stripe/stripe-js": "^8.0.0",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
@@ -21,10 +17,17 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "framer-motion": "^12.23.24",
     "ioredis": "^5.8.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
-    "stripe": "^19.1.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.9.4",
+    "recharts": "^3.2.1",
+    "stripe": "^19.1.0",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
