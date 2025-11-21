@@ -1,35 +1,29 @@
 {
-  "name": "e-commerce-store",
-  "version": "1.0.0",
-  "main": "Backend/server.js",
-  "type": "module",
-  "scripts": {
-    "dev": "nodemon Backend/server.js",
-    "start": "node Backend/server.js",
-    "build": "cd Frontend && npm install && npm run build"
-  },
-  "dependencies": {
-    "@stripe/stripe-js": "^8.0.0",
-    "axios": "^1.12.2",
-    "bcryptjs": "^3.0.2",
-    "cloudinary": "^2.7.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "framer-motion": "^12.23.24",
-    "ioredis": "^5.8.1",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-hot-toast": "^2.6.0",
-    "react-router-dom": "^7.9.4",
-    "recharts": "^3.2.1",
-    "stripe": "^19.1.0",
-    "zustand": "^5.0.8"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.10"
-  }
+	"name": "e-commerce-store",
+	"version": "1.0.0",
+	"description": "",
+	"main": "backend/server.js",
+	"scripts": {
+		"dev": "nodemon Backend/server.js",
+		"start": "node Backend/server.js",
+		"build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
+	},
+	"keywords": [],
+	"author": "",
+	"type": "module",
+	"license": "ISC",
+	"dependencies": {
+		"bcryptjs": "^2.4.3",
+		"cloudinary": "^2.4.0",
+		"cookie-parser": "^1.4.6",
+		"dotenv": "^16.4.5",
+		"express": "^4.19.2",
+		"ioredis": "^5.4.1",
+		"jsonwebtoken": "^9.0.2",
+		"mongoose": "^8.5.3",
+		"stripe": "^16.8.0"
+	},
+	"devDependencies": {
+		"nodemon": "^3.1.4"
+	}
 }
