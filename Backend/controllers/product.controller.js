@@ -1,6 +1,6 @@
 import Product from "../models/product.model.js";
 import cloudinary from "../lib/cloudinary.js";
-import { a, desc } from "framer-motion/client";
+
 
 export const getAllProducts = async (req, res) => {
   try {
