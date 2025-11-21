@@ -7,8 +7,7 @@
   "dev": "nodemon Backend/server.js",
   "start": "node Backend/server.js",
   "build": "npm install && cd Frontend && npm install && npm run build"
-}
-
+},
   "dependencies": {
     "@stripe/stripe-js": "^8.0.0",
     "axios": "^1.12.2",
