@@ -9,18 +9,20 @@ export const useCartStore = create((set, get) => ({
   total: 0,
   isCouponApplied: false,
 
+  // Fetch cart items
   getCartItems: async () => {
     try {
       const res = await axios.get("/cart", { withCredentials: true });
       const cartItems = Array.isArray(res.data.cart) ? res.data.cart : [];
       set({ cart: cartItems });
-      get().cartTotal();
+      if (typeof get().cartTotal === "function") get().cartTotal();
     } catch (error) {
       set({ cart: [] });
       toast.error(error?.response?.data?.message || "Error loading cart");
     }
   },
 
+  // Calculate subtotal and total
   cartTotal: () => {
     const { cart, coupon } = get();
     const subtotal = Array.isArray(cart)
@@ -38,6 +40,7 @@ export const useCartStore = create((set, get) => ({
     set({ subtotal, total });
   },
 
+  // Add product to cart
   addToCart: async (product) => {
     if (!product?._id) return toast.error("Product not found");
     try {
@@ -57,13 +60,14 @@ export const useCartStore = create((set, get) => ({
         return { cart: newCart };
       });
 
-      get().cartTotal();
+      if (typeof get().cartTotal === "function") get().cartTotal();
       toast.success("Product added to cart");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error adding product");
     }
   },
 
+  // Remove product from cart
   removeFromCart: async (productId) => {
     if (!productId) return;
     try {
@@ -71,17 +75,18 @@ export const useCartStore = create((set, get) => ({
       set((prev) => ({
         cart: prev.cart.filter((i) => i._id !== productId),
       }));
-      get().cartTotal();
+      if (typeof get().cartTotal === "function") get().cartTotal();
       toast.success("Product removed from cart");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error removing product");
     }
   },
 
+  // Update product quantity
   updateQuantity: async (productId, quantity) => {
     if (!productId) return;
     if (quantity < 1) {
-      get().removeFromCart(productId);
+      if (typeof get().removeFromCart === "function") get().removeFromCart(productId);
       return;
     }
 
@@ -98,9 +103,46 @@ export const useCartStore = create((set, get) => ({
         ),
       }));
 
-      get().cartTotal();
+      if (typeof get().cartTotal === "function") get().cartTotal();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error updating quantity");
+    }
+  },
+
+  // ---------------- Coupon Functions ----------------
+  getMyCoupon: async () => {
+    try {
+      const res = await axios.get("/cart/coupon", { withCredentials: true });
+      set({ coupon: res.data || null });
+    } catch (err) {
+      set({ coupon: null });
+    }
+  },
+
+  applyCoupon: async (code) => {
+    if (!code) return toast.error("Please enter a valid coupon code");
+    try {
+      const res = await axios.post(
+        "/cart/apply-coupon",
+        { code },
+        { withCredentials: true }
+      );
+      set({ coupon: res.data, isCouponApplied: true });
+      if (typeof get().cartTotal === "function") get().cartTotal();
+      toast.success("Coupon applied successfully!");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to apply coupon");
+    }
+  },
+
+  removeCoupon: async () => {
+    try {
+      await axios.post("/cart/remove-coupon", {}, { withCredentials: true });
+      set({ coupon: null, isCouponApplied: false });
+      if (typeof get().cartTotal === "function") get().cartTotal();
+      toast.success("Coupon removed");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to remove coupon");
     }
   },
 }));
