@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import axios from "../lib/axios.js";
 import { toast } from "react-hot-toast";
-import { useUserStore } from "./useUserStore.js";
-import coupon from "../../../Backend/models/coupon.model.js";
 
 export const useCartStore = create((set, get) => ({
   cart: [],
@@ -10,42 +8,6 @@ export const useCartStore = create((set, get) => ({
   subtotal: 0,
   total: 0,
   isCouponApplied: false,
-
-  getMyCoupon: async () => {
-    try {
-      const res = await axios.get("/coupons", { withCredentials: true });
-      set({ coupon: res.data.coupon });
-    } catch (error) {
-      set({ coupon: null });
-      const message =
-        error?.response?.data?.message || "Error in Get My Coupon Function";
-      toast.error(message);
-    }
-  },
-
-  applyCoupon: async (code) => {
-    try {
-      const res = await axios.post(
-        "/coupons/validate",
-        { code },
-        { withCredentials: true }
-      );
-      set({ coupon: res.data, isCouponApplied: true });
-      get().cartTotal();
-      toast.success("Coupon applied successfully");
-    } catch (error) {
-      set({ coupon: null });
-      const message =
-        error?.response?.data?.message || "Error in Apply Coupon Function";
-      toast.error(message);
-    }
-  },
-
-  removeCoupon: () => {
-    set({ coupon: null, isCouponApplied: false });
-    get().cartTotal();
-    toast.success("Coupon removed successfully");
-  },
 
   getCartItems: async () => {
     try {
@@ -56,7 +18,11 @@ export const useCartStore = create((set, get) => ({
         cartItems.map(async (item) => {
           try {
             const productRes = await axios.get(`/products/${item.id}`);
-            return { ...productRes.data, quantity: item.quantity };
+            return {
+              ...productRes.data,
+              cartItemId: item.id, // backend cart item ID
+              quantity: item.quantity,
+            };
           } catch (err) {
             console.warn("Product fetch failed for id", item.id);
             return null;
@@ -65,16 +31,11 @@ export const useCartStore = create((set, get) => ({
       );
 
       set({ cart: detailedCart.filter(Boolean) });
-      get().cartTotal?.(); // safely call cartTotal if it exists
+      get().cartTotal?.();
     } catch (error) {
       set({ cart: [] });
-      const message =
-        error?.response?.data?.message || "Error in Get Cart Function";
-      toast.error(message);
+      toast.error(error?.response?.data?.message || "Error fetching cart");
     }
-  },
-  clearCart: async () => {
-    set({ cart: [], coupon: null, total: 0, subtotal: 0 });
   },
 
   addToCart: async (product) => {
@@ -104,55 +65,54 @@ export const useCartStore = create((set, get) => ({
       toast.success("Product added to cart successfully");
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Error in Add to Cart Function"
+        error?.response?.data?.message || "Error adding product to cart"
       );
     }
   },
 
-  removeFromCart: async (productId) => {
+  removeFromCart: async (cartItemId) => {
     try {
       await axios.delete("/cart", {
-        data: { productId },
+        data: { productId: cartItemId },
         withCredentials: true,
       });
 
       set((prevState) => ({
-        cart: prevState.cart.filter((item) => item._id !== productId),
+        cart: prevState.cart.filter((item) => item.cartItemId !== cartItemId),
       }));
 
       get().cartTotal();
       toast.success("Product removed from cart");
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Error in Remove from Cart Function"
+        error?.response?.data?.message || "Error removing product from cart"
       );
     }
   },
 
-  updateQuantity: async (productId, quantity) => {
+  updateQuantity: async (cartItemId, quantity) => {
     if (quantity < 1) {
-      get().removeFromCart(productId);
+      get().removeFromCart(cartItemId);
       return;
     }
 
     try {
-      // Do NOT include /api again — proxy handles it
       await axios.put(
-        `/cart/${productId}`,
+        `/cart/${cartItemId}`,
         { quantity },
         { withCredentials: true }
       );
 
       set((prevState) => ({
         cart: prevState.cart.map((item) =>
-          item._id === productId ? { ...item, quantity } : item
+          item.cartItemId === cartItemId ? { ...item, quantity } : item
         ),
       }));
 
       get().cartTotal();
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Error in Update Quantity Function"
+        error?.response?.data?.message || "Error updating quantity"
       );
       console.error(error.response);
     }
@@ -168,9 +128,11 @@ export const useCartStore = create((set, get) => ({
     let total = subtotal;
     if (coupon) {
       const discount = (coupon.discountPercentage / 100) * subtotal;
-      total = subtotal - subtotal * (coupon.discountPercentage / 100);
+      total = subtotal - discount;
     }
 
     set({ subtotal, total });
   },
+
+  clearCart: () => set({ cart: [], coupon: null, subtotal: 0, total: 0 }),
 }));
