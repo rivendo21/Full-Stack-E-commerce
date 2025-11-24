@@ -24,7 +24,10 @@ export const useCartStore = create((set, get) => ({
   cartTotal: () => {
     const { cart, coupon } = get();
     const subtotal = Array.isArray(cart)
-      ? cart.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+      ? cart.reduce(
+          (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+          0
+        )
       : 0;
 
     let total = subtotal;
@@ -62,6 +65,7 @@ export const useCartStore = create((set, get) => ({
   },
 
   removeFromCart: async (productId) => {
+    if (!productId) return;
     try {
       await axios.delete("/cart", { data: { productId }, withCredentials: true });
       set((prev) => ({
@@ -75,6 +79,7 @@ export const useCartStore = create((set, get) => ({
   },
 
   updateQuantity: async (productId, quantity) => {
+    if (!productId) return;
     if (quantity < 1) {
       get().removeFromCart(productId);
       return;
