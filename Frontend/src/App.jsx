@@ -16,19 +16,19 @@ import PurchaseFailedPage from "./pages/PurchaseFailedPage";
 
 function App() {
   const { user, checkAuth, checkingAuth } = useUserStore();
-  const { getCartItems } = useCartStore();
+  const { getCartItems, cartLoaded } = useCartStore(); // cartLoaded flag
 
   // Check authentication once when app loads
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
-  // Load cart items once after user logs in
+  // Load cart items **only once after user logs in**
   useEffect(() => {
-    if (user) {
-      getCartItems(); // fetch cart only once
+    if (user && !cartLoaded) {
+      getCartItems();
     }
-  }, [user]); // <- removed getCartItems from dependency to avoid overwriting cart
+  }, [user, cartLoaded, getCartItems]);
 
   if (checkingAuth) return <LoadingSpinner />;
 
