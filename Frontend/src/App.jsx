@@ -1,12 +1,33 @@
+import { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+
+import Navbar from "./components/Navbar";
+import LoadingSpinner from "./components/LoadingSpinner";
+
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import AdminPage from "./pages/AdminPage";
+import CategoryPage from "./pages/CategoryPage";
+import CartPage from "./pages/CartPage";
+import PurchaseSuccessPage from "./pages/PurchaseSuccessPage";
+import PurchaseFailedPage from "./pages/PurchaseFailedPage";
+
+import { useUserStore } from "./stores/useUserStore";
+import { useCartStore } from "./stores/useCartStore";
+
 function App() {
   const { user, checkAuth, checkingAuth } = useUserStore();
   const getCartItems = useCartStore((state) => state.getCartItems);
   const cartLoaded = useCartStore((state) => state.cartLoaded);
 
+  // Check user auth once
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
+  // Load cart items only once after user logs in
   useEffect(() => {
     if (user && !cartLoaded) {
       getCartItems();
@@ -34,3 +55,5 @@ function App() {
     </div>
   );
 }
+
+export default App;
