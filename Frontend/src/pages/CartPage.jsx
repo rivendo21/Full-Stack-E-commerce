@@ -10,10 +10,9 @@ import GiftCouponCard from "../components/GiftCouponCard";
 const CartPage = () => {
   const { cart = [], getCartItems } = useCartStore();
 
-  // Safely call getCartItems only if it exists
   useEffect(() => {
     if (typeof getCartItems === "function") {
-      getCartItems();
+      getCartItems().catch((err) => console.error("Error fetching cart:", err));
     }
   }, [getCartItems]);
 
@@ -28,18 +27,9 @@ const CartPage = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             {Array.isArray(cart) && cart.length > 0 ? (
-              cart.map((item) => (
-                <CartItem
-                  key={item._id}
-                  item={item}
-                  // Pass a safe remove function if needed inside CartItem
-                  removeItem={
-                    typeof useCartStore.getState().removeFromCart === "function"
-                      ? useCartStore.getState().removeFromCart
-                      : () => {}
-                  }
-                />
-              ))
+              cart.map((item) =>
+                item?._id ? <CartItem key={item._id} item={item} /> : null
+              )
             ) : (
               <EmptyCartUI />
             )}
