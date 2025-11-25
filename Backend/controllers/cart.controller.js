@@ -1,19 +1,18 @@
 import Product from "../models/product.model.js";
 
-
 const toStr = (id) => id.toString();
 
 export const getCartProducts = async (req, res) => {
   try {
     const products = await Product.find({
-      _id: { $in: req.user.cartItems.map((item) => item.id) },
+      _id: { $in: req.user.cartItems.map((item) => item.product) },
     });
 
     const cartItems = products.map((product) => {
       const item = req.user.cartItems.find(
-        (cartItem) => cartItem.id === toStr(product._id)
+        (cartItem) => cartItem.product.toString() === product._id.toString()
       );
-      return { ...product.toJSON(), quantity: item.quantity,_id:product._id };
+      return { ...product.toJSON(), quantity: item.quantity, _id: product._id };
     });
 
     res.json(cartItems);
@@ -29,13 +28,13 @@ export const addToCart = async (req, res) => {
     const user = req.user;
 
     const existingItem = user.cartItems.find(
-      (item) => item.id === productId
+      (item) => item.product.toString() === productId
     );
 
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
-      user.cartItems.push({ id: productId, quantity: 1 });
+      user.cartItems.push({ product: productId, quantity: 1 });
     }
 
     await user.save();
@@ -54,7 +53,9 @@ export const removeAllFromCart = async (req, res) => {
     if (!productId) {
       user.cartItems = [];
     } else {
-      user.cartItems = user.cartItems.filter((item) => item.id !== productId);
+      user.cartItems = user.cartItems.filter(
+        (item) => item.product.toString() !== productId
+      );
     }
 
     await user.save();
@@ -72,7 +73,7 @@ export const updateQuantity = async (req, res) => {
     const user = req.user;
 
     const existingItem = user.cartItems.find(
-      (item) => item.id === productId
+      (item) => item.product.toString() === productId
     );
 
     if (!existingItem) {
@@ -80,7 +81,9 @@ export const updateQuantity = async (req, res) => {
     }
 
     if (quantity <= 0) {
-      user.cartItems = user.cartItems.filter((item) => item.id !== productId);
+      user.cartItems = user.cartItems.filter(
+        (item) => item.product.toString() !== productId
+      );
     } else {
       existingItem.quantity = quantity;
     }
