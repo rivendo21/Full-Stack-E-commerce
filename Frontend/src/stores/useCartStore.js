@@ -21,7 +21,13 @@ export const useCartStore = create((set, get) => ({
 
       const items = Array.isArray(res.data.cart) ? res.data.cart : [];
 
-      set({ cart: items, cartLoaded: true });
+      // Ensure every item has _id for consistency
+      const mappedItems = items.map((item) => ({
+        ...item,
+        _id: item._id || item.id,
+      }));
+
+      set({ cart: mappedItems, cartLoaded: true });
       get().cartTotal();
     } catch (err) {
       set({ cart: [], cartLoaded: true });
@@ -54,32 +60,33 @@ export const useCartStore = create((set, get) => ({
   // ADD TO CART
   // -----------------------------------------
   addToCart: async (product) => {
-    if (!product?._id) return toast.error("Product ID missing");
+    const productId = product?._id || product?.id;
+    if (!productId) return toast.error("Product ID missing");
 
     try {
       await axios.post(
         "/cart",
-        { productId: product._id },
+        { productId },
         { withCredentials: true }
       );
 
       set((state) => {
-        const exists = state.cart.find((i) => i._id === product._id);
+        const exists = state.cart.find((i) => (i._id || i.id) === productId);
 
         let updatedCart;
 
         if (exists) {
           // Increase quantity
           updatedCart = state.cart.map((i) =>
-            i._id === product._id
+            (i._id || i.id) === productId
               ? { ...i, quantity: (i.quantity || 0) + 1 }
               : i
           );
         } else {
-          // Add new item — IMPORTANT: keep previous items
+          // Add new item — ensure _id is set
           updatedCart = [
             ...state.cart,
-            { ...product, quantity: 1 },
+            { ...product, _id: productId, quantity: 1 },
           ];
         }
 
@@ -106,7 +113,7 @@ export const useCartStore = create((set, get) => ({
       });
 
       set((state) => ({
-        cart: state.cart.filter((i) => i._id !== productId),
+        cart: state.cart.filter((i) => (i._id || i.id) !== productId),
       }));
 
       get().cartTotal();
@@ -136,7 +143,7 @@ export const useCartStore = create((set, get) => ({
 
       set((state) => ({
         cart: state.cart.map((i) =>
-          i._id === productId ? { ...i, quantity } : i
+          (i._id || i.id) === productId ? { ...i, quantity } : i
         ),
       }));
 
