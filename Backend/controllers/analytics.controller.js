@@ -11,7 +11,7 @@ export const getAnalyticsData = async () => {
       $group: {
         _id: null,
         totalSales: { $sum: 1 },
-        totalRevenue: { $sum: "$totalamount" },
+        totalRevenue: { $sum: "$totalAmount" },
       },
     },
   ]);
@@ -30,32 +30,29 @@ export const getAnalyticsData = async () => {
 };
 
 export const getDailySalesData = async (startDate, endDate) => {
-  const dailySales = await Order.aggregate([
-    {
-      $match: {
-        createdAt: { $gte: startDate, $lte: endDate },
-      },
-    },
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-        totalSales: { $sum: 1 },
-        totalRevenue: { $sum: "$totalamount" },
-      },
-    },
-    {
-      $sort: {
-        _id: 1,
-      },
-    },
-  ]);
+  try {
+    const dailySales = await Order.aggregate([ ... ]);
+    const dateArray = getDatesInRange(startDate, endDate);
+    return dateArray.map((date) => {
+      const salesData = dailySales.find((item) => item._id === date);
+      return {
+        date,
+        sales: salesData?.totalSales || 0,
+        revenue: salesData?.totalRevenue || 0,
+      };
+    });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
   const dateArray = getDatesInRange(startDate, endDate);
 
   return dateArray.map((date) => {
     const salesData = dailySales.find((item) => item._id === date);
     return {
-      name: date,
+      date: date,
       sales: salesData?.totalSales || 0,
       revenue: salesData?.totalRevenue || 0,
     };
