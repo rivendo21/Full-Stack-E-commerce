@@ -43,7 +43,7 @@ export const getDailySalesData = async (startDate, endDate) => {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
           totalSales: { $sum: 1 },
-          totalRevenue: { $sum: "$totalAmount" },
+          totalRevenue: { $sum: "$totalamount" },
         },
       },
       { $sort: { _id: 1 } },
