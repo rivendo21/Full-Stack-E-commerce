@@ -1,7 +1,9 @@
 import Product from "../models/product.model.js";
 
+// Helper to convert ObjectId to string
 const toStr = (id) => id.toString();
 
+// Get all products in the cart
 export const getCartProducts = async (req, res) => {
   try {
     const products = await Product.find({
@@ -22,6 +24,7 @@ export const getCartProducts = async (req, res) => {
   }
 };
 
+// Add product to cart
 export const addToCart = async (req, res) => {
   try {
     const { productId } = req.body;
@@ -45,14 +48,17 @@ export const addToCart = async (req, res) => {
   }
 };
 
+// Remove all products or a single product from cart
 export const removeAllFromCart = async (req, res) => {
   try {
     const { productId } = req.body;
     const user = req.user;
 
     if (!productId) {
+      // Remove all
       user.cartItems = [];
     } else {
+      // Remove specific product
       user.cartItems = user.cartItems.filter(
         (item) => item.product.toString() !== productId
       );
@@ -66,6 +72,7 @@ export const removeAllFromCart = async (req, res) => {
   }
 };
 
+// Update quantity of a cart item
 export const updateQuantity = async (req, res) => {
   try {
     const { id: productId } = req.params;
@@ -81,6 +88,7 @@ export const updateQuantity = async (req, res) => {
     }
 
     if (quantity <= 0) {
+      // Remove item if quantity <= 0
       user.cartItems = user.cartItems.filter(
         (item) => item.product.toString() !== productId
       );
