@@ -9,7 +9,7 @@ const stripePromise = loadStripe(
 	"pk_test_51KZYccCoOZF2UhtOwdXQl3vcizup20zqKqT9hVUIsVzsdBrhqbUI2fE0ZdEVLdZfeHjeyFXtqaNsyCJCmZWnjNZa00PzMAjlcL"
 );
 
-const OrderSummary = () => {
+const OrdersSummary = () => {
 	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
 
 	const savings = subtotal - total;
@@ -92,4 +92,4 @@ const OrderSummary = () => {
 		</motion.div>
 	);
 };
-export default OrderSummary;
+export default OrdersSummary;
