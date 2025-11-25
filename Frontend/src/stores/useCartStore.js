@@ -8,10 +8,11 @@ export const useCartStore = create((set, get) => ({
   subtotal: 0,
   total: 0,
   isCouponApplied: false,
-  cartLoaded: false, // <- new flag
+  cartLoaded: false,
 
+  // Load cart from server
   getCartItems: async () => {
-    if (get().cartLoaded) return; // already loaded, skip
+    if (get().cartLoaded) return;
     try {
       const res = await axios.get("/cart", { withCredentials: true });
       const cartItems = Array.isArray(res.data.cart) ? res.data.cart : [];
@@ -23,10 +24,15 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
+  // Calculate totals
   cartTotal: () => {
     const { cart, coupon } = get();
     const subtotal = Array.isArray(cart)
-      ? cart.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+      ? cart.reduce(
+          (sum, item) =>
+            sum + (item.price || 0) * (item.quantity || 1),
+          0
+        )
       : 0;
     let total = subtotal;
     if (coupon?.discountPercentage) {
@@ -35,16 +41,21 @@ export const useCartStore = create((set, get) => ({
     set({ subtotal, total });
   },
 
+  // Add product to cart
   addToCart: async (product) => {
-    if (!product?._id) return toast.error("Product not found");
+    if (!product?._id) return toast.error("Product ID missing");
     try {
       await axios.post("/cart", { productId: product._id }, { withCredentials: true });
 
       set((prev) => {
         const exists = prev.cart.find((i) => i._id === product._id);
         const newCart = exists
-          ? prev.cart.map((i) => (i._id === product._id ? { ...i, quantity: i.quantity + 1 } : i))
-          : [...prev.cart, { ...product, quantity: 1 }];
+          ? prev.cart.map((i) =>
+              i._id === product._id
+                ? { ...i, quantity: (i.quantity || 0) + 1 }
+                : i
+            )
+          : [{ ...product, quantity: 1 }];
         return { cart: newCart };
       });
 
@@ -55,11 +66,14 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
+  // Remove product from cart
   removeFromCart: async (productId) => {
     if (!productId) return;
     try {
       await axios.delete("/cart", { data: { productId }, withCredentials: true });
-      set((prev) => ({ cart: prev.cart.filter((i) => i._id !== productId) }));
+      set((prev) => ({
+        cart: prev.cart.filter((i) => i._id && i._id !== productId)
+      }));
       get().cartTotal();
       toast.success("Product removed from cart");
     } catch (error) {
@@ -67,6 +81,7 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
+  // Update product quantity
   updateQuantity: async (productId, quantity) => {
     if (!productId) return;
     if (quantity < 1) {
@@ -75,17 +90,23 @@ export const useCartStore = create((set, get) => ({
     }
     try {
       await axios.put(`/cart/${productId}`, { quantity }, { withCredentials: true });
-      set((prev) => ({ cart: prev.cart.map((i) => (i._id === productId ? { ...i, quantity } : i)) }));
+      set((prev) => ({
+        cart: prev.cart.map((i) =>
+          i._id === productId ? { ...i, quantity } : i
+        )
+      }));
       get().cartTotal();
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error updating quantity");
     }
   },
 
+  // Apply a coupon
   applyCoupon: async (code) => {
+    if (!code) return toast.error("Coupon code is required");
     try {
       const res = await axios.post("/cart/apply-coupon", { code }, { withCredentials: true });
-      set({ coupon: res.data.coupon, isCouponApplied: true });
+      set({ coupon: res.data.coupon || null, isCouponApplied: true });
       get().cartTotal();
       toast.success("Coupon applied");
     } catch (error) {
@@ -93,7 +114,8 @@ export const useCartStore = create((set, get) => ({
     }
   },
 
-  removeCoupon: async () => {
+  // Remove applied coupon
+  removeCoupon: () => {
     set({ coupon: null, isCouponApplied: false });
     get().cartTotal();
   },
