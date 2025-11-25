@@ -13,7 +13,7 @@ export const getCartProducts = async (req, res) => {
       const item = req.user.cartItems.find(
         (cartItem) => cartItem.id === toStr(product._id)
       );
-      return { ...product.toJSON(), quantity: item.quantity };
+      return { ...product.toJSON(), quantity: item.quantity,_id:product._id };
     });
 
     res.json(cartItems);
