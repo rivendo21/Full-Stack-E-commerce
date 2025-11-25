@@ -2,6 +2,7 @@ import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 import User from "../models/user.model.js";
 
+// Get overall analytics data
 export const getAnalyticsData = async () => {
   const totalUsers = await User.countDocuments();
   const totalProducts = await Product.countDocuments();
@@ -11,7 +12,7 @@ export const getAnalyticsData = async () => {
       $group: {
         _id: null,
         totalSales: { $sum: 1 },
-        totalRevenue: { $sum: "$totalAmount" },
+        totalRevenue: { $sum: "$totalAmount" }, // Make sure this matches your schema field
       },
     },
   ]);
@@ -29,10 +30,27 @@ export const getAnalyticsData = async () => {
   };
 };
 
+// Get daily sales data between two dates
 export const getDailySalesData = async (startDate, endDate) => {
   try {
-    const dailySales = await Order.aggregate([ ... ]);
+    const dailySales = await Order.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          totalSales: { $sum: 1 },
+          totalRevenue: { $sum: "$totalAmount" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
     const dateArray = getDatesInRange(startDate, endDate);
+
     return dateArray.map((date) => {
       const salesData = dailySales.find((item) => item._id === date);
       return {
@@ -42,29 +60,20 @@ export const getDailySalesData = async (startDate, endDate) => {
       };
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching daily sales data:", error);
     throw error;
   }
 };
 
-  const dateArray = getDatesInRange(startDate, endDate);
-
-  return dateArray.map((date) => {
-    const salesData = dailySales.find((item) => item._id === date);
-    return {
-      date: date,
-      sales: salesData?.totalSales || 0,
-      revenue: salesData?.totalRevenue || 0,
-    };
-  });
-};
-
+// Helper function to generate all dates in range
 function getDatesInRange(startDate, endDate) {
   const dates = [];
   let currentDate = new Date(startDate);
+
   while (currentDate <= endDate) {
     dates.push(currentDate.toISOString().split("T")[0]);
     currentDate.setDate(currentDate.getDate() + 1);
   }
+
   return dates;
 }
