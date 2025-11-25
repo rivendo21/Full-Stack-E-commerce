@@ -12,7 +12,7 @@ export const getAnalyticsData = async () => {
       $group: {
         _id: null,
         totalSales: { $sum: 1 },
-        totalRevenue: { $sum: "$totalAmount" }, // Make sure this matches your schema field
+        totalRevenue: { $sum: "$totalamount" }, // Make sure this matches your schema field
       },
     },
   ]);
