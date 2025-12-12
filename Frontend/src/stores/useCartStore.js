@@ -60,45 +60,32 @@ export const useCartStore = create((set, get) => ({
   // ADD TO CART
   // -----------------------------------------
   addToCart: async (product) => {
-    const productId = product?._id || product?.id;
-    if (!productId) return toast.error("Product ID missing");
+  const productId = product?._id || product?.id;
+  if (!productId) return toast.error("Product ID missing");
 
-    try {
-      await axios.post(
-        "/cart",
-        { productId },
-        { withCredentials: true }
-      );
+  try {
+    await axios.post(
+      "/cart",
+      { productId },
+      { withCredentials: true }
+    );
 
-      set((state) => {
-        const exists = state.cart.find((i) => (i._id || i.id) === productId);
+    // ✅ REFETCH cart from backend to get properly formatted data
+    const res = await axios.get("/cart", { withCredentials: true });
+    const items = Array.isArray(res.data.cart) ? res.data.cart : [];
 
-        let updatedCart;
+    const mappedItems = items.map((item) => ({
+      ...item,
+      _id: item._id || item.id,
+    }));
 
-        if (exists) {
-          // Increase quantity
-          updatedCart = state.cart.map((i) =>
-            (i._id || i.id) === productId
-              ? { ...i, quantity: (i.quantity || 0) + 1 }
-              : i
-          );
-        } else {
-          // Add new item — ensure _id is set
-          updatedCart = [
-            ...state.cart,
-            { ...product, _id: productId, quantity: 1 },
-          ];
-        }
-
-        return { cart: updatedCart };
-      });
-
-      get().cartTotal();
-      toast.success("Added to cart");
-    } catch (err) {
-      toast.error("Failed to add to cart");
-    }
-  },
+    set({ cart: mappedItems });
+    get().cartTotal();
+    toast.success("Added to cart");
+  } catch (err) {
+    toast.error("Failed to add to cart");
+  }
+},
 
   // -----------------------------------------
   // REMOVE FROM CART
