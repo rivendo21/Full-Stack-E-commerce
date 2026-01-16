@@ -1,0 +1,31 @@
+
+{
+  "name": "e-commerce-store",
+  "version": "1.0.0",
+  "description": "this is a package used as a backend server for ecommerce",
+  "main": "Backend/server.js",
+  "scripts": {
+    "dev": "nodemon Backend/server.js",
+    "start": "node Backend/server.js",
+    "build": "npm install && npm install --prefix Frontend && npm run build --prefix Frontend"
+  },
+	"_comment":"so here this is like metadata and dependencies that will be needed and those information to share the project and this comment this way allow me to type comments in json file and here i use type module instead of the normal commonjs the old way that will need me to use require instead of importing and exporting",
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.4.0",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.3",
+    "stripe": "^16.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
