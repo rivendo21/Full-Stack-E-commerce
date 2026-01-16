@@ -9,6 +9,16 @@ export const useCartStore = create((set, get) => ({
   total: 0,
   isCouponApplied: false,
   cartLoaded: false,
+
+  getMyCoupon: async () => {
+    try {
+      const response = await axios.get("/coupons");
+      set({ coupon: response.data });
+    } catch (error) {
+      console.error("Error fetching coupon:", error);
+    }
+  },
+
   getCartItems: async () => {
     try {
       const res = await axios.get("/cart");
@@ -16,8 +26,10 @@ export const useCartStore = create((set, get) => ({
       get().calculateTotals();
     } catch (err) {
       set({ cart: [] });
-      toast.error(err.response.data.message || "Failed to load cart");
     }
+  },
+  clearCart: async () => {
+    set({ cart: [], coupon: null, total: 0, subtotal: 0 });
   },
 
   addToCart: async (product) => {
@@ -63,7 +75,7 @@ export const useCartStore = create((set, get) => ({
     if (!productId) return;
 
     try {
-      await axios.delete("/cart/", { data: { productId } });
+      await axios.delete("/cart", { data: { productId } });
 
       set((state) => ({
         cart: state.cart.filter((i) => (i._id || i.id) !== productId),
@@ -82,15 +94,30 @@ export const useCartStore = create((set, get) => ({
       return;
     }
 
-    await axios.put(`/cart/${productId}`, { quantity });
+    console.log(
+      "Updating quantity for product:",
+      productId,
+      "with quantity:",
+      quantity
+    );
 
-    set((state) => ({
-      cart: state.cart.map((i) =>
-        i._id == productId ? { ...i, quantity } : i
-      ),
-    }));
+    try {
+      const res = await axios.put(`/cart/${productId}`, { quantity });
+      console.log("Response from server:", res.data);
 
-    get().calculateTotals();
+      set((state) => ({
+        cart: state.cart.map((i) =>
+          String(i._id) == productId ? { ...i, quantity } : i
+        ),
+      }));
+      console.log("Updated cart state:", get().cart);
+
+      get().calculateTotals();
+      console.log("Updated total:", get().total);
+    } catch (err) {
+      console.log("Error updating quantity:", err);
+      toast.error("Failed to update quantity");
+    }
   },
 
   applyCoupon: async (code) => {

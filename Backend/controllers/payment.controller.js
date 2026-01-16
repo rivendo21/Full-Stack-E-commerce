@@ -14,7 +14,7 @@ export const createCheckoutSession = async (req, res) => {
 
     const lineItems = products.map((product) => {
       const amount = Math.round(product.price * 100); //cents
-      totalAmount += amount * product.quantity;
+      totalAmount += amount * product.quantity || 1;
 
       return {
         price_data: {
@@ -25,6 +25,7 @@ export const createCheckoutSession = async (req, res) => {
           },
           unit_amount: amount,
         },
+        quantity: product.quantity || 1,
       };
     });
 
@@ -69,7 +70,9 @@ export const createCheckoutSession = async (req, res) => {
       await createNewCoupon(req.user._id);
     }
     res.status(200).json({ id: session.id, totalAmount: totalAmount / 100 });
-  } catch (error) {}
+  } catch (error) {
+    console.log("Error in createCheckoutSession controller:", error.message);
+  }
 };
 
 async function createStripeCoupon(discountPercentage) {

@@ -57,9 +57,6 @@ export const useUserStore = create((set, get) => ({
       });
     } catch (error) {
       set({ checkingAuth: false, user: null });
-      if (error.response && error.response.status !== 401) {
-        toast.error(error.response?.data?.message);
-      }
     }
   },
 
@@ -82,7 +79,9 @@ export const useUserStore = create((set, get) => ({
       return response.data;
     } catch (error) {
       set({ user: null, checkingAuth: false });
-      throw error;
+      if (error.response?.status !== 401) {
+        throw error;
+      }
     }
   },
 }));
